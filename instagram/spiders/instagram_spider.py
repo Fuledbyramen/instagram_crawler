@@ -23,6 +23,7 @@ def regex_with_default(regex, string, group_number, default_return=0):
 class InstagramSpider(scrapy.Spider):
     name = 'instagram_spider'
     
+    '''
     hashtags = ['love', 'instagood', 'me', 'tbt', 'cute', 'follow', 'followme', 
     'photooftheday', 'happy', 'tagforlikes', 'beautiful', 'self', 'girl', 'picoftheday', 
     'like', 'smile', 'friends', 'fun', 'like', 'fashion', 'summer', 'instadaily', 'igers', 
@@ -32,7 +33,8 @@ class InstagramSpider(scrapy.Spider):
     'instafollow', 'instasize', 'bored', 'instacool', 'funny', 'mcm', 'instago', 'instasize', 
     'vscocam', 'girls', 'all', 'party', 'music', 'eyes', 'nature', 'beauty', 'night', 'fitness', 
     'beach', 'look', 'nice', 'sky', 'christmas', 'baby', 'selfie', 'like4like']
-
+    '''
+    hashtags = ['love']
 
     allowed_domains = ['https://www.instagram.com', 'www.instagram.com']
     start_urls = []
@@ -55,13 +57,16 @@ class InstagramSpider(scrapy.Spider):
         response.headers['content-type'] = 'application/x-www-form-urlencoded'
         response.headers['x-csrftoken'] = csrf
         response.headers['x-requested-with'], response.headers['x-instagram-ajax'], response.headers['accept'] = 'XMLHttpRequest', '1', '*/*'
-        
+        response.headers['accept-encoding'], response.headers['accept-language']= 'gzip, deflate, br','en-US,en;q=0.8'
 
         end_cursor = re.search(r"\"end\_cursor\"\: \"(.+?)\"", html).group(1)
+        
         #data = {"q" :"ig_hashtag({})+%7B+media.after({}+10)+%7B%0A++count%2C%0A++nodes+%7B%0A++++caption%2C%0A++++code%2C%0A++++comments+%7B%0A++++++count%0A++++%7D%2C%0A++++comments_disabled%2C%0A++++date%2C%0A++++dimensions+%7B%0A++++++height%2C%0A++++++width%0A++++%7D%2C%0A++++display_src%2C%0A++++id%2C%0A++++is_video%2C%0A++++likes+%7B%0A++++++count%0A++++%7D%2C%0A++++owner+%7B%0A++++++id%0A++++%7D%2C%0A++++thumbnail_src%2C%0A++++video_views%0A++%7D%2C%0A++page_info%0A%7D%0A+%7D&ref=tags%3A%3Ashow".format(tag, end_cursor)}
-        data = "q=ig_hashtag({})+%7B+media.after({}+10)+%7B%0A++count%2C%0A++nodes+%7B%0A++++caption%2C%0A++++code%2C%0A++++comments+%7B%0A++++++count%0A++++%7D%2C%0A++++comments_disabled%2C%0A++++date%2C%0A++++dimensions+%7B%0A++++++height%2C%0A++++++width%0A++++%7D%2C%0A++++display_src%2C%0A++++id%2C%0A++++is_video%2C%0A++++likes+%7B%0A++++++count%0A++++%7D%2C%0A++++owner+%7B%0A++++++id%0A++++%7D%2C%0A++++thumbnail_src%2C%0A++++video_views%0A++%7D%2C%0A++page_info%0A%7D%0A+%7D&ref=tags%3A%3Ashow".format(tag, end_cursor)
+        data = "q=ig_hashtag({})+%7B+media.after({}+9)+%7B%0A++count%2C%0A++nodes+%7B%0A++++caption%2C%0A++++code%2C%0A++++comments+%7B%0A++++++count%0A++++%7D%2C%0A++++comments_disabled%2C%0A++++date%2C%0A++++dimensions+%7B%0A++++++height%2C%0A++++++width%0A++++%7D%2C%0A++++display_src%2C%0A++++id%2C%0A++++is_video%2C%0A++++likes+%7B%0A++++++count%0A++++%7D%2C%0A++++owner+%7B%0A++++++id%0A++++%7D%2C%0A++++thumbnail_src%2C%0A++++video_views%0A++%7D%2C%0A++page_info%0A%7D%0A+%7D&ref=tags%3A%3Ashow".format(tag, end_cursor)
         url = 'https://www.instagram.com/query/'
 
+        print(data)
+        print(response.headers)
         yield Request(url, body=data, method="POST", callback=self.parseHashtag)
         #yield FormRequest(url, formdata=data, callback=self.parseHashtag)
 
@@ -69,7 +74,7 @@ class InstagramSpider(scrapy.Spider):
         body = response.xpath("//body")
         html = str(body.extract())
 
-        
+        print(response.body)
         print("_______________________________________________________________")
         print(len(url_codes))
         print("_______________________________________________________________")
