@@ -35,54 +35,38 @@ class InstagramSpider(scrapy.Spider):
     'beach', 'look', 'nice', 'sky', 'christmas', 'baby', 'selfie', 'like4like']
     '''
     hashtags = ['love']
-
+    
     allowed_domains = ['https://www.instagram.com', 'www.instagram.com']
     start_urls = []
     for hashtag in hashtags:
         start_urls.append("https://www.instagram.com/explore/tags/%s/" % (hashtag))
 
-
     def parse(self, response):
         body = response.xpath("//body")
         html = str(body.extract())
         
+        img_num = 48
+        base_url = "https://www.instagram.com/query/"
+        beginning_param = "?q=ig_hashtag("
+        middle_param = ")%20%7B%20media.after("
+        end_param = "%2C%20{})%20%7B%0A%20%20count%2C%0A%20%20nodes%20%7B%0A%20%20%20%20caption%2C%0A%20%20%20%20code%2C%0A%20%20%20%20comments%20%7B%0A%20%20%20%20%20%20count%0A%20%20%20%20%7D%2C%0A%20%20%20%20comments_disabled%2C%0A%20%20%20%20date%2C%0A%20%20%20%20dimensions%20%7B%0A%20%20%20%20%20%20height%2C%0A%20%20%20%20%20%20width%0A%20%20%20%20%7D%2C%0A%20%20%20%20display_src%2C%0A%20%20%20%20id%2C%0A%20%20%20%20is_video%2C%0A%20%20%20%20likes%20%7B%0A%20%20%20%20%20%20count%0A%20%20%20%20%7D%2C%0A%20%20%20%20owner%20%7B%0A%20%20%20%20%20%20id%0A%20%20%20%20%7D%2C%0A%20%20%20%20thumbnail_src%2C%0A%20%20%20%20video_views%0A%20%20%7D%2C%0A%20%20page_info%0A%7D%0A%20%7D&ref=tags%3A%3Ashow".format(img_num)
+
         response_url = str(response.url)
         tag = re.search(r"explore\/tags\/(.+?)\/", response_url).group(1)
-        csrf = re.search(r"csrftoken\=(.+?)\;", str(response.headers)).group(1)
-        
-        response.headers['referer'] = 'https://www.instagram.com/explore/tags/{}/'.format(tag)
-        response.headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
-        response.headers['origin'] = 'https://www.instagram.com'
-        response.headers['authority'] = 'www.instagram.com'
-        response.headers['content-type'] = 'application/x-www-form-urlencoded'
-        response.headers['x-csrftoken'] = csrf
-        response.headers['x-requested-with'], response.headers['x-instagram-ajax'], response.headers['accept'] = 'XMLHttpRequest', '1', '*/*'
-        response.headers['accept-encoding'], response.headers['accept-language']= 'gzip, deflate, br','en-US,en;q=0.8'
 
         end_cursor = re.search(r"\"end\_cursor\"\: \"(.+?)\"", html).group(1)
         
-        #data = {"q" :"ig_hashtag({})+%7B+media.after({}+10)+%7B%0A++count%2C%0A++nodes+%7B%0A++++caption%2C%0A++++code%2C%0A++++comments+%7B%0A++++++count%0A++++%7D%2C%0A++++comments_disabled%2C%0A++++date%2C%0A++++dimensions+%7B%0A++++++height%2C%0A++++++width%0A++++%7D%2C%0A++++display_src%2C%0A++++id%2C%0A++++is_video%2C%0A++++likes+%7B%0A++++++count%0A++++%7D%2C%0A++++owner+%7B%0A++++++id%0A++++%7D%2C%0A++++thumbnail_src%2C%0A++++video_views%0A++%7D%2C%0A++page_info%0A%7D%0A+%7D&ref=tags%3A%3Ashow".format(tag, end_cursor)}
-        data = "q=ig_hashtag({})+%7B+media.after({}+9)+%7B%0A++count%2C%0A++nodes+%7B%0A++++caption%2C%0A++++code%2C%0A++++comments+%7B%0A++++++count%0A++++%7D%2C%0A++++comments_disabled%2C%0A++++date%2C%0A++++dimensions+%7B%0A++++++height%2C%0A++++++width%0A++++%7D%2C%0A++++display_src%2C%0A++++id%2C%0A++++is_video%2C%0A++++likes+%7B%0A++++++count%0A++++%7D%2C%0A++++owner+%7B%0A++++++id%0A++++%7D%2C%0A++++thumbnail_src%2C%0A++++video_views%0A++%7D%2C%0A++page_info%0A%7D%0A+%7D&ref=tags%3A%3Ashow".format(tag, end_cursor)
-        url = 'https://www.instagram.com/query/'
-
-        print(data)
-        print(response.headers)
-        yield Request(url, body=data, method="POST", callback=self.parseHashtag)
-        #yield FormRequest(url, formdata=data, callback=self.parseHashtag)
+        data = base_url + beginning_param + tag + middle_param + end_cursor + end_param
+        #data = "https://www.instagram.com/query/?q=ig_hashtag({})%20%7B%20media.after({}%2C%2048)%20%7B%0A%20%20count%2C%0A%20%20nodes%20%7B%0A%20%20%20%20caption%2C%0A%20%20%20%20code%2C%0A%20%20%20%20comments%20%7B%0A%20%20%20%20%20%20count%0A%20%20%20%20%7D%2C%0A%20%20%20%20comments_disabled%2C%0A%20%20%20%20date%2C%0A%20%20%20%20dimensions%20%7B%0A%20%20%20%20%20%20height%2C%0A%20%20%20%20%20%20width%0A%20%20%20%20%7D%2C%0A%20%20%20%20display_src%2C%0A%20%20%20%20id%2C%0A%20%20%20%20is_video%2C%0A%20%20%20%20likes%20%7B%0A%20%20%20%20%20%20count%0A%20%20%20%20%7D%2C%0A%20%20%20%20owner%20%7B%0A%20%20%20%20%20%20id%0A%20%20%20%20%7D%2C%0A%20%20%20%20thumbnail_src%2C%0A%20%20%20%20video_views%0A%20%20%7D%2C%0A%20%20page_info%0A%7D%0A%20%7D&ref=tags%3A%3Ashow".format(tag, end_cursor)
+        yield Request(data, callback=self.parseHashtag)
 
     def parseHashtag(self, response):
         body = response.xpath("//body")
         html = str(body.extract())
-
-        print(response.body)
-        print("_______________________________________________________________")
-        print(len(url_codes))
-        print("_______________________________________________________________")
-        quit()
-        exit()
         
         url_codes = re.findall("\"code\"\: \"(.+?)\"", html)
         urls = []
+
         for code in url_codes:
             urls.append("https://www.instagram.com/p/%s/" % (code))
         for url in urls:
